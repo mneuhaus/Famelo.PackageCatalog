@@ -1,0 +1,51 @@
+<f:layout name="Default" />
+
+<f:section name="Title">TYPO3 Package Catalog</f:section>
+
+<f:section name="Content">
+<link rel="stylesheet" type="text/css" href="{f:uri.resource(path: 'Libraries/bootstrap/css/bootstrap.css', package: 'TYPO3.PackageCatalog')}" />
+<link rel="stylesheet" type="text/css" href="{f:uri.resource(path: 'Stylesheets/main.css', package: 'TYPO3.PackageCatalog')}" />
+
+        <div id="packages">
+	    	<input type="text" class="search" placeholder="Search packages" />
+	    	<div class="grid list">
+                <f:for each="{packages}" as="package">
+		    		<div>
+		    			<h5 class="name">{package.name}</h5>
+		    			<p class="description">{package.description}</p>
+		    			<dl class="dl-horizontal">
+			    			<f:if condition="{package.keywords}">
+		  					<dt>Keywords</dt>
+							<dd class="keywords">
+									<f:for each="{package.keywords}" as="keyword" iteration="i">
+		            				{keyword}<f:if condition="{iterator.isLast}">,</f:if>
+		            			</f:for>
+		            		</dd>
+		            		</f:if>
+
+		            		<dt>Version</dt>
+		            		<dd class="version">{package.version}</dd>
+
+		            		<dt>Type</dt>
+		            		<dd class="type">{package.type}</dd>
+
+							<f:if condition="{package.homepage}">
+							<dt>Homepage</dt>
+							<dd><a href="{package.homepage}">{package.homepage}</a></dd>
+							</f:if>
+						</dl>
+		    		</div>
+		    	</f:for>
+	    	</div>
+        </div>
+
+    <!-- Start of List.js stuff -->
+    <script src="{f:uri.resource(path: 'JavaScripts/list.js', package: 'TYPO3.PackageCatalog')}"></script>
+
+    <script type="text/javascript">
+        var options = {
+    	    valueNames: [ 'id', 'name', 'description', 'keywords', 'version', 'type' ]
+        };
+        var contactList = new List('packages', options);
+    </script>
+</f:section>

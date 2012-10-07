@@ -1,0 +1,50 @@
+<f:layout name="Default" />
+
+<f:section name="Title">TYPO3 Package Catalog</f:section>
+
+<f:section name="Content">
+<link rel="stylesheet" type="text/css" href="{f:uri.resource(path: 'Libraries/bootstrap/css/bootstrap.css', package: 'TYPO3.PackageCatalog')}" />
+<link rel="stylesheet" type="text/css" href="{f:uri.resource(path: 'Stylesheets/main.css', package: 'TYPO3.PackageCatalog')}" />
+
+        <div id="packages">
+	    	<input type="text" class="search" placeholder="Search contact" />
+            <table>
+                <thead>
+                    <tr>
+                        <th class="sort" data-sort="name">Name</th>
+                        <th class="sort" data-sort="description">Description</th>
+                        <th class="sort" data-sort="keywords">Keywords</th>
+                        <th class="sort" data-sort="version">Version</th>
+                        <th class="sort" data-sort="type">Type</th>
+                        <th colspan="2">
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="list">
+                	<f:for each="{packages}" as="package">
+                		<tr>
+                			<td class="name">{package.name}</td>
+                			<td class="description">{package.description}</td>
+                			<td class="keywords">
+                				<f:for each="{package.keywords}" as="keyword" iteration="i">
+                				{keyword}<f:if condition="{iterator.isLast}">,</f:if>
+                				</f:for>
+                			</td>
+                			<td class="version">{package.version}</td>
+                			<td class="type">{package.type}</td>
+                		</tr>
+                	</f:for>
+                </tbody>
+            </table>
+        </div>
+
+    <!-- Start of List.js stuff -->
+    <script src="{f:uri.resource(path: 'JavaScripts/list.js', package: 'TYPO3.PackageCatalog')}"></script>
+
+    <script type="text/javascript">
+        var options = {
+    	    valueNames: [ 'id', 'name', 'description', 'keywords', 'version', 'type' ]
+        };
+        var contactList = new List('packages', options);
+    </script>
+</f:section>
