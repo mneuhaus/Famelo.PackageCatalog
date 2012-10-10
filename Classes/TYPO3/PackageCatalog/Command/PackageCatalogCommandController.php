@@ -49,6 +49,10 @@ class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController 
 			$baseUrl = dirname($repository) . '/';
 			$basePath = FLOW_PATH_DATA . 'Packages/' . $domain;
 
+			if (!is_dir(FLOW_PATH_DATA . 'Packages/')) {
+				mkdir(FLOW_PATH_DATA . 'Packages/');
+			}
+
 			if (!is_dir(FLOW_PATH_DATA . 'Packages/' . $domain)) {
 				mkdir(FLOW_PATH_DATA . 'Packages/' . $domain);
 			}
@@ -100,8 +104,8 @@ class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController 
 	}
 
 	public function versionNewer($package1, $package2) {
-		$datetime1 = new DateTime($package1->time);
-		$datetime2 = new DateTime($package2->time);
+		$datetime1 = new \DateTime($package1->time);
+		$datetime2 = new \DateTime($package2->time);
 		return $datetime1 < $datetime2;
 	}
 }
