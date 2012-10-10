@@ -10,7 +10,7 @@
 	    	<input type="text" class="search" placeholder="Search packages" />
 	    	<div class="grid list">
                 <f:for each="{packages}" as="package">
-		    		<div>
+		    		<div class="item">
 		    			<h5 class="name">{package.name}</h5>
 		    			<p class="description">{package.description}</p>
 		    			<dl class="dl-horizontal">
@@ -39,13 +39,20 @@
 	    	</div>
         </div>
 
-    <!-- Start of List.js stuff -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
     <script src="{f:uri.resource(path: 'JavaScripts/list.js', package: 'TYPO3.PackageCatalog')}"></script>
+    <script src="{f:uri.resource(path: 'JavaScripts/masonry.js', package: 'TYPO3.PackageCatalog')}"></script>
 
     <script type="text/javascript">
         var options = {
     	    valueNames: [ 'id', 'name', 'description', 'keywords', 'version', 'type' ]
         };
-        var contactList = new List('packages', options);
+        var packages = new List('packages', options);
+        $('input.search').keyup(function(){
+        	$('.grid').masonry( 'reload' );
+        });
+        $('.grid').masonry({
+			itemSelector: '.item'
+		});
     </script>
 </f:section>
