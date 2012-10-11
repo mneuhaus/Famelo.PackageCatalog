@@ -33,6 +33,12 @@ class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController 
 	protected $browserRequestEngine;
 
 	/**
+     * @var \TYPO3\Flow\Configuration\ConfigurationManager
+     * @Flow\Inject
+     */
+    protected $configurationManager;
+
+	/**
 	 * This command fetches the new versions of the packages.json from the known repositories
 	 *
 	 * This command fetches the new versions of the packages.json from the known repositories
@@ -85,6 +91,8 @@ class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController 
 		}
 		$flowPackagesFile = FLOW_PATH_DATA . 'Packages/packages-typo3-flow.json';
 		file_put_contents($flowPackagesFile, json_encode($flowPackages));
+
+		$this->checkForNewPackages($flowPackages);
 	}
 
 	public function filterFlowPackages($packages) {
@@ -107,6 +115,45 @@ class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController 
 		$datetime1 = new \DateTime($package1->time);
 		$datetime2 = new \DateTime($package2->time);
 		return $datetime1 < $datetime2;
+	}
+
+	public function checkForNewPackages($packages) {
+		$knownPackagesFile = FLOW_PATH_DATA . 'Packages/knownPackagesFile.json';
+
+		if (file_exists($knownPackagesFile)) {
+			$knownPackages = json_decode(file_get_contents($knownPackagesFile));
+		} else {
+			$knownPackages = array();
+		}
+
+		$newPackages = array();
+		foreach ($packages as $package) {
+			if (preg_match("/^typo3\//", $package->name)) {
+				if (!in_array($package->name, $knownPackages)){
+					$newPackages[] = $package->name;
+					$knownPackages[] = $package->name;
+				}
+			}
+		}
+
+		if (count($newPackages) > 0) {
+			$body = "There's a new package on packagist using the TYPO3 vendor namespace: \n\n";
+			foreach ($newPackages as $newPackage) {
+				$body.= $newPackage . "\n";
+			}
+			$receipients = $this->configurationManager->getConfiguration(\TYPO3\Flow\Configuration\ConfigurationManager::CONFIGURATION_TYPE_SETTINGS, 'Famelo.PackageCatalog.Receipients');
+			if (count($receipients) > 0) {
+				$mail = new \TYPO3\SwiftMailer\Message();
+				$mail
+					->setFrom(array("apocalip@gmail.com" => "Famelo.PackageCatalog"))
+					->setTo($receipients)
+					->setSubject("New TYPO3 Packages on packagist")
+					->setBody($body, 'text/plain')
+					->send();
+			}
+		}
+
+		file_put_contents($knownPackagesFile, json_encode($knownPackages));
 	}
 }
 
