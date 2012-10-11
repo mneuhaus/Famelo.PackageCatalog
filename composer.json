@@ -1,1 +1,13 @@
-{"name":"typo3\/packagecatalog","type":"typo3-flow-package","description":"","require":{"typo3\/flow":"*"},"autoload":{"psr-0":{"TYPO3\\PackageCatalog":"Classes"}}}
+{
+	"name":"famelo\/packagecatalog",
+	"type":"typo3-flow-package",
+	"description":"A simple Catalog to display Packages form Packagist.org filtered by typo3-flow*",
+	"require":{
+		"typo3\/flow":"*"
+	},
+	"autoload":{
+		"psr-0":{
+			"Famelo\\PackageCatalog":"Classes"
+		}
+	}
+}
