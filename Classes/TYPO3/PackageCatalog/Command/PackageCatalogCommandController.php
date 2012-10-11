@@ -1,5 +1,5 @@
 <?php
-namespace TYPO3\PackageCatalog\Command;
+namespace Famelo\PackageCatalog\Command;
 
 /*                                                                        *
  * This script belongs to the TYPO3 Flow package "TYPO3.Gerrit".          *
