@@ -16,8 +16,9 @@ use TYPO3\Flow\Annotations as Flow;
 class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController {
 
 	protected $repositories = array(
-		"https://packagist.org/packages.json",
-		"http://ci.typo3.robertlemke.net/job/composer-packages/ws/repository/packages.json"
+		'https://packagist.org/' => 'https://packagist.org/packages.json',
+		'https://packagist.org/' => 'https://packagist.org/p/providers-latest.json',
+		'http://ci.typo3.robertlemke.net/job/composer-packages/ws/repository/' => 'http://ci.typo3.robertlemke.net/job/composer-packages/ws/repository/packages.json'
 	);
 
 	/**
@@ -47,12 +48,11 @@ class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController 
 	 */
 	public function updateCommand() {
 		$this->browser->setRequestEngine($this->browserRequestEngine);
-
 		$flowPackages = array();
 
-		foreach ($this->repositories as $repository) {
+		foreach ($this->repositories as $baseUrl => $repository) {
 			$domain = parse_url($repository, PHP_URL_HOST);
-			$baseUrl = dirname($repository) . '/';
+			#$baseUrl = dirname($repository) . '/';
 			$basePath = FLOW_PATH_DATA . 'Packages/' . $domain;
 
 			if (!is_dir(FLOW_PATH_DATA . 'Packages/')) {
@@ -68,30 +68,54 @@ class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController 
 			file_put_contents($packagesFile, $response->getContent());
 			$packageList = json_decode($response->getContent());
 
-			if (isset($packageList->includes)){
+			if (isset($packageList->includes)) {
 				$includes = get_object_vars($packageList->includes);
 				if (!empty($includes)) {
 					foreach ($includes as $file => $meta) {
 						$packagesFile = $basePath . '/' . $file;
-						if (file_exists($packagesFile) && sha1_file($packagesFile) == $meta->sha1) continue;
+						if (file_exists($packagesFile) && sha1_file($packagesFile) == $meta->sha1) {
+							continue;
+						}
+						if (!is_dir(dirname(($packagesFile)))) {
+							\TYPO3\Flow\Utility\Files::createDirectoryRecursively(dirname($packagesFile));
+						}
 						try {
 							$response = $this->browser->request($baseUrl . $file);
 							file_put_contents($packagesFile, $response->getContent());
-						} catch(\Exception $e) {}
+						} catch(\Exception $e) {
+						}
 					}
 				}
 			}
 
-			$files = scandir($basePath);
+			if (isset($packageList->providers)) {
+				$providers = get_object_vars($packageList->providers);
+				if (!empty($providers)) {
+					foreach ($providers as $file => $meta) {
+						$packagesFile = $basePath . '/' . $file;
+						if (file_exists($packagesFile) && sha1_file($packagesFile) == $meta->sha1) {
+							continue;
+						}
+						if (!is_dir(dirname(($packagesFile)))) {
+							\TYPO3\Flow\Utility\Files::createDirectoryRecursively(dirname($packagesFile));
+						}
+						try {
+							$response = $this->browser->request($baseUrl . $file);
+							file_put_contents($packagesFile, $response->getContent());
+						} catch(\Exception $e) {
+						}
+					}
+				}
+			}
+
+			$files = \TYPO3\Flow\Utility\Files::readDirectoryRecursively($basePath, '.json');
 			foreach ($files as $file) {
-				if (pathinfo($file, PATHINFO_EXTENSION) !== "json") continue;
-				$packagesObject = json_decode(file_get_contents($basePath . '/' . $file));
+				$packagesObject = json_decode(file_get_contents($file));
 				$flowPackages = array_merge($flowPackages, $this->filterFlowPackages($packagesObject->packages));
 			}
 		}
 		$flowPackagesFile = FLOW_PATH_DATA . 'Packages/packages-typo3-flow.json';
 		file_put_contents($flowPackagesFile, json_encode($flowPackages));
-
 		$this->checkForNewPackages($flowPackages);
 	}
 
@@ -100,7 +124,7 @@ class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController 
 		foreach ($packages as $packageVersions) {
 			$packageVersions = get_object_vars($packageVersions);
 			foreach ($packageVersions as $version => $package) {
-				if (stristr($package->type, "typo3-flow")) {
+				if (stristr($package->type, "typo3-flow") || preg_match("/^typo3\//", $package->name)) {
 					if (!isset($flowPackages[$package->name]) || $this->versionNewer($flowPackages[$package->name], $package)) {
 						#$package->versions = $packageVersions;
 						$flowPackages[$package->name] = clone $package;
@@ -145,10 +169,11 @@ class PackageCatalogCommandController extends \TYPO3\Flow\Cli\CommandController 
 			if (count($receipients) > 0) {
 				$mail = new \TYPO3\SwiftMailer\Message();
 				$mail
-					->setFrom(array("apocalip@gmail.com" => "Famelo.PackageCatalog"))
+					->setFrom(array("server@famelo.com" => "Famelo.PackageCatalog"))
 					->setTo($receipients)
 					->setSubject("New TYPO3 Packages on packagist")
 					->setBody($body, 'text/plain')
+					->addPart(str_replace("\n", "<br />", $body), 'text/html')
 					->send();
 			}
 		}
